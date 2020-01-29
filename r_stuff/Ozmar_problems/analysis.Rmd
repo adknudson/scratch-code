@@ -1,0 +1,201 @@
+---
+title: "Analysis"
+author: "Alex Knudson"
+date: "11/12/2019"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA)
+
+pacman::p_load(tidyverse, rstan)
+```
+
+
+# Problem 1
+
+$$
+\begin{align*}
+y &\sim \text{Bernoulli}(\pi) \\
+\text{logit}(\pi) &= \alpha + \beta \times x \\
+\alpha &\sim \mathcal{N}(0, 10) \\
+\beta &\sim \mathcal{N}(0, 10)
+\end{align*}
+$$
+
+**Model Code**
+
+```{r}
+model_code <- "data{
+    // Number of observations, factor levels, etc.
+    int<lower=1> N;
+
+    // Response Data
+    int y[N];
+
+    // Numeric Data
+    real x[N];
+}
+parameters{
+    // Intercept terms
+    real a;
+
+    // Slope terms
+    real b;
+}
+model{
+    vector[N] theta;
+
+    // Priors
+    a ~ normal(0, 10);
+    b ~ normal(0, 10);
+
+    // General linear model
+    for (i in 1:N) {
+        theta[i] = a + b * x[i];
+    }
+    y ~ bernoulli_logit(theta);
+}"
+```
+
+**Fitting the Model**
+
+```{r, results='hide'}
+stocks <- read_csv("data/Prob 9-1.csv", col_types = "id") # integer, double
+
+stocks <- as.list(stocks)
+stocks$N <- length(stocks$y)
+
+m1 <- stan(model_code = model_code, data = stocks)
+post1 <- extract(m1)
+```
+
+**Posterior Sample Plot**
+
+```{r}
+n_draws <- 500
+draws <- sample(length(post1$a), n_draws, TRUE)
+
+logistic <- function(x, a, b) { 1 / (1 + exp(-(a+b*x)))}
+
+plot(stocks$x, stocks$y, type = "n",
+     xlab="Number of Hours", ylab = "P(Successful Stock)")
+for (i in draws) {
+  curve(logistic(x, post1$a[i], post1$b[i]), 
+        from = min(stocks$x),
+        to = max(stocks$x), add = TRUE, col = rgb(0, 0, 0, 0.1))
+}
+points(stocks$x, stocks$y, col = "lightblue", pch = 20, cex = 2,
+     xlab="Number of Hours", ylab = "Stock Successful")
+```
+
+
+# Problem 2
+
+$$
+\begin{align*}
+y &\sim \text{Poisson}(\lambda) \\
+\text{log}(\lambda) &= \alpha + \beta \times x \\
+\alpha &\sim \mathcal{N}(0, 1) \\
+\beta &\sim \mathcal{N}(0, 1)
+\end{align*}
+$$
+
+**Model Code**
+
+```{r}
+model_code2 <- '
+data{
+    // Number of observations, factor levels, etc.
+    int<lower=1> N;
+
+    // Response Data
+    int y[N];
+
+    // Numeric Data
+    real x[N];
+}
+parameters{
+    // Intercept terms
+    real a;
+
+    // Slope terms
+    real b;
+}
+model{
+    // Priors
+    a ~ normal(0, 1);
+    b ~ normal(0, 1);
+
+    for(i in 1:N)
+      y[i] ~ poisson_log(a + b * x[i]);
+}'
+```
+
+**Fitting the Model**
+
+```{r, results='hide'}
+stocks2 <- read_csv("data/Prob 9-2.csv", col_types = "id") %>%
+  as.list()
+stocks2$N <- length(stocks2$y)
+
+m2 <- stan(model_code = model_code2, data = stocks2)
+post2 <- extract(m2)
+```
+
+**Posterior Sample Plot**
+
+```{r}
+n_draws <- 500
+draws <- sample(length(post2$a), n_draws, TRUE)
+
+f <- function(x, a, b) {exp(a + b * x)}
+
+plot(stocks2$x, stocks2$y, type = "n",
+     xlab="Years of Experience", ylab = "Number of Successful Stocks")
+for (i in draws) {
+  curve(f(x, post2$a[i], post2$b[i]), 
+        from = min(stocks$x),
+        to = max(stocks$x), add = TRUE, col = rgb(0, 0, 0, 0.1))
+}
+points(stocks2$x, stocks2$y, col = "lightblue", pch = 20, cex = 2)
+```
+
+
+# Prediction
+
+```{r}
+n <- length(post2$a)
+x <- runif(n, min(stocks2$x), max(stocks2$x))
+idx <- sample(1:length(post2$a), n, TRUE)
+a <- post2$a[idx]
+b <- post2$b[idx]
+
+sim <- rpois(n, exp(a + b * x))
+
+n_draws <- 1000
+draws <- sample(length(post2$a), n_draws, TRUE)
+
+f <- function(x, a, b) {exp(a + b * x)}
+```
+
+
+```{r}
+plot(stocks2$x, stocks2$y, type = "n", main = "Poisson Regression",
+     xlab="Years of Experience", ylab = "Number of Successful Stocks")
+points(x, sim, col = rgb(32, 193, 214, 32, maxColorValue = 255), 
+       pch = 22, cex = 1.5)
+for (i in draws) {
+  curve(f(x, post2$a[i], post2$b[i]), 
+        from = min(stocks$x),
+        to = max(stocks$x), add = TRUE, col = rgb(0, 0, 0, 0.02))
+}
+points(stocks2$x, stocks2$y, col = "black", pch = 4, cex = 1.5)
+legend(x = "topleft", 
+       pch = c(4, 22, NA),
+       lty = c(NA, NA, "solid"),
+       col = c("black", rgb(32, 193, 214, 255, maxColorValue = 255), "black"),
+       legend = c("Data", "Predicted", "Fitted Mean"))
+```
+

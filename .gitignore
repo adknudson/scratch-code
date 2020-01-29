@@ -1,0 +1,9 @@
+*.ipynb
+.ipynb_checkpoints
+
+.Rproj.user
+*.rds
+*.html
+.Rhistory
+
+*.gif
