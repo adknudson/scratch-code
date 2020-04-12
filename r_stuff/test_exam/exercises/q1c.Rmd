@@ -1,0 +1,22 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA)
+```
+
+
+```{r, echo=FALSE, results='hide'}
+op <- sample(c("+", "-"), 1)
+res <- do.call(op, list(a, b))
+```
+
+
+Question
+========
+What is $`r a` `r op` `r b`$?
+
+Meta-information
+================
+extype: num
+exsolution: `r fmt(res)`
+exname: sum of two integers
+extol: 0.01
