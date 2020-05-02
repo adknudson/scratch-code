@@ -27,7 +27,7 @@ sudo chown -R slurm.slurm /var/spool/slurm-llnl
 sudo chown -R slurm.slurm /var/run/slurm-llnl
 
 # Open up the configurator tool using your favorite browser
-google-chrome /usr/share/doc/slurm-wlm-doc/html/configurator.easy.html 
+google-chrome /usr/share/doc/slurm-wlm-doc/html/configurator.easy.html
 
 #######################################
 # CONFIGURATOR STEPS
@@ -37,9 +37,9 @@ google-chrome /usr/share/doc/slurm-wlm-doc/html/configurator.easy.html
 # NodeName: your PC's hostname
 #
 # The following values are found from running `slurmd -C`
-# CPUs: 12
+# CPUs: 24
 # ThreadsPerCore: 2
-# RealMemory: 16020
+# RealMemory: 32038
 #
 # State Preservation
 # StateSaveLocation: /var/spool/slurm-llnl
