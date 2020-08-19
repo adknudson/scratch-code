@@ -17,7 +17,7 @@ end
 
 
 # ╔═╡ f23a1aec-d361-11ea-0c4f-bb035fa3abe8
-using Distributions
+using Distributions, StatsPlots
 
 # ╔═╡ 07df092a-d362-11ea-291a-4f0ef2df3347
 function beta_s(w, a, b)
