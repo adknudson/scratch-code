@@ -1,0 +1,94 @@
+---
+title: "Simulation Based Calibration"
+author: "Alex Knudson"
+date: "8/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+```
+
+$$
+\mu \sim \mathcal{N}(0, 1)
+$$
+
+$$
+\sigma \sim \mathrm{lognormal}(0, 1)
+$$
+
+$$
+y_n \sim \mathcal{N}(\mu, \sigma)
+$$
+
+
+```{stan output.var="m1"}
+transformed data {
+  real mu_sim = normal_rng(0, 1);
+  real<lower = 0> sigma_sim = lognormal_rng(0, 1);
+
+  int<lower = 0> J = 10;
+  vector[J] y_sim;
+  for (j in 1:J)
+    y_sim[j] = student_t_rng(4, mu_sim, sigma_sim);
+}
+parameters {
+  real mu;
+  real<lower = 0> sigma;
+}
+model {
+  mu ~ normal(0, 1);
+  sigma ~ lognormal(0, 1);
+
+  y_sim ~ normal(mu, sigma);
+}
+generated quantities {
+  int<lower = 0, upper = 1> I_lt_sim[2]
+      = { mu < mu_sim, sigma < sigma_sim };
+}
+```
+
+
+
+```{r}
+f1 <- sampling(m1)
+p1 <- extract(f1)
+```
+
+
+```{stan output.var="m2"}
+data {
+  int<lower = 1> N;
+  real<lower = 0> a;
+  real<lower = 0> b;
+}
+transformed data { // these adhere to the conventions above
+  real pi_ = beta_rng(a, b);
+  int y = binomial_rng(N, pi_);
+}
+parameters {
+  real<lower = 0, upper = 1> pi;
+}
+model {
+  target += beta_lpdf(pi | a, b);
+  target += binomial_lpmf(y | N, pi);
+}
+generated quantities { // these adhere to the conventions above
+  int y_ = y;
+  vector[1] pars_;
+  int ranks_[1] = {pi > pi_};
+  vector[N] log_lik;
+  pars_[1] = pi_;
+  for (n in 1:y) log_lik[n] = bernoulli_lpmf(1 | pi);
+  for (n in (y + 1):N) log_lik[n] = bernoulli_lpmf(0 | pi);
+}
+```
+
+
+```{r}
+sbc(stanmodel = m2, data = list(N = 1, a = 1, b = 9), M = 999)
+```
+
