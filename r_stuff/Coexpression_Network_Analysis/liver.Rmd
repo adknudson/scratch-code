@@ -1,0 +1,252 @@
+---
+title: "WGCNA Tutorial"
+author: "Alex Knudson"
+date: "9/8/2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE,
+                      comment = NA)
+
+library(tidyverse)
+library(WGCNA)
+```
+
+# Data input, cleaning, and pre-processing
+
+## Loading expression data
+
+```{r}
+liver <- read_csv("~/Downloads/LiverFemale3600.csv")
+liver
+```
+
+Note that each row corresponds to a gene and column to a sample or auxiliary information. We now remove the auxiliary data and transpose the expression data for further analysis.
+
+```{r}
+datExpr0 <- liver %>% 
+  select(-c(1:8)) %>% 
+  t() %>% 
+  as_tibble() %>%
+  rename_with(.fn = ~ return(liver$substanceBXH)) %>%
+  as.data.frame()
+
+rownames(datExpr0) <- names(liver)[-c(1:8)]
+
+as_tibble(datExpr0, rownames = "Mice")
+```
+
+Now the genes are in the columns and the samples are the rows.
+
+## Checking for excessive missing values and identification of outlier microarray samples
+
+```{r}
+gsg <- goodSamplesGenes(datExpr = datExpr0, verbose = 3)
+gsg$allOK
+```
+
+```{r}
+sampleDist <- dist(datExpr0)
+sampleTree <- hclust(sampleDist, method = "average")
+```
+
+```{r, fig.width=12, fig.height=9}
+par(mar = c(0, 4, 2, 0), cex = 0.6)
+plot(sampleTree, main = "Sample clustering to detect outliers", sub = "",
+     xlab = "", cex.lab = 1.5, cex.axis = 1.5, cex.main = 2)
+abline(h = 15, col = "red")
+```
+
+```{r}
+clust <- cutreeStatic(sampleTree, cutHeight = 15, minSize = 10)
+table(clust)
+```
+
+```{r}
+datExpr <- filter(datExpr0, clust == 1)
+(nGenes <- ncol(datExpr))
+(nSamples <- nrow(datExpr))
+```
+
+## Loading clinical trait data
+
+```{r}
+traitData <- read_csv("~/Downloads/ClinicalTraits.csv")
+traitData
+```
+
+```{r}
+(keep <- names(traitData)[c(2, 11:15, 17:30, 32:38)])
+
+allTraits <- traitData %>%
+  select(all_of(keep))
+
+allTraits
+```
+
+```{r}
+(femaleSamples <- rownames(datExpr))
+
+datTraits <- allTraits %>%
+  slice(match(femaleSamples, allTraits$Mice)) %>%
+  select(-Mice) %>%
+  as.data.frame()
+
+rownames(datTraits) <- allTraits$Mice[match(femaleSamples, allTraits$Mice)]
+```
+
+```{r, fig.width=12, fig.height=9}
+sampleDist2 <- dist(datExpr)
+sampleTree2 <- hclust(sampleDist2, method = "average")
+traitColors <- numbers2colors(datTraits, signed = FALSE)
+plotDendroAndColors(sampleTree2, traitColors,
+                    groupLabels = names(datTraits),
+                    main = "Sample dendrogram and trait heatmap")
+```
+
+# Automatic network construction and module detection
+
+```{r}
+enableWGCNAThreads()
+```
+
+## Automatic network construction and module detection
+
+### Choosing the soft-thresholding power: analysis of network topology
+
+```{r}
+powers <- c(1:10, seq(12, 20, 2))
+
+system.time({
+  sft <- pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+})
+```
+
+```{r, fig.width=10, fig.height=5}
+x  <- sft$fitIndices$Power
+y1 <- -sign(sft$fitIndices$slope) * sft$fitIndices$SFT.R.sq
+y2 <- sft$fitIndices$mean.k.
+par(mfrow = c(1, 2))
+
+plot(x, y1,
+     main = "Scale independence",
+     xlab = "Soft Threshold (power)",
+     ylab = "Scale Free Topology Model Fit, signed R^2",
+     type = "n")
+text(x, y1, labels = powers, cex = 0.9, col = "red")
+abline(h = 0.9, col = "red")
+plot(x, y2,
+     main = "Mean connectivity",
+     xlab = "Soft Threshold (power)",
+     ylab = "Mean connectivity",
+     type = "n")
+text(x, y2, labels = powers, cex = 0.9, col = "red")
+```
+
+### One-step network construction and module detection
+
+```{r}
+net <- blockwiseModules(datExpr = datExpr, 
+                        power = 6,
+                        TOMType = "unsigned", 
+                        minModuleSize = 30,
+                        reassignThreshold = 0,
+                        mergeCutHeight = 0.25,
+                        numericLabels = TRUE,
+                        pamRespectsDendro = FALSE,
+                        saveTOMs = TRUE,
+                        saveTOMFileBase = "femaleMouseTOM",
+                        maxBlockSize = 20000,
+                        verbose = 3)
+```
+
+```{r}
+table(net$colors)
+table(net$colors) %>% sort
+```
+
+```{r, fig.width=12, fig.height=9}
+mergedColors <- labels2colors(net$colors)
+plotDendroAndColors(dendro = net$dendrograms[[1]], 
+                    colors = mergedColors[net$blockGenes[[1]]],
+                    groupLabels = "Module colors",
+                    dendroLabels = FALSE,
+                    hang = 0.03,
+                    addGuide = TRUE,
+                    guideHang = 0.05)
+```
+
+## Step-by-step network construction and module detection
+
+### Co-expression similarity and adjacency
+
+```{r}
+softPower <- 6
+adj <- adjacency(datExpr, power = softPower)
+```
+
+### Topological Overlap Matrix (TOM)
+
+```{r}
+TOM <- TOMsimilarity(adj)
+dissTOM <- 1 - TOM
+```
+
+### Clustering using TOM
+
+```{r, fig.width=12, fig.height=9}
+geneTree <- hclust(as.dist(dissTOM), method = "average")
+plot(geneTree,
+     main = "Gene clustering on TOM-based dissimilarity",
+     xlab = "",
+     sub = "",
+     labels = FALSE, hang = 0.04)
+```
+
+```{r}
+minModuleSize <- 30
+dynamicMods <- cutreeDynamic(dendro = geneTree,
+                             distM = dissTOM,
+                             deepSplit = 2,
+                             pamRespectsDendro = FALSE,
+                             minClusterSize = minModuleSize)
+table(dynamicMods)
+```
+
+```{r}
+dynamicColors <- labels2colors(dynamicMods)
+table(dynamicColors)
+```
+
+```{r, fig.width=12, fig.height=9}
+plotDendroAndColors(dendro = geneTree,
+                    colors = dynamicColors,
+                    groupLabels = "Dynamic Tree Cut",
+                    dendroLabels = FALSE,
+                    hang = 0.03,
+                    addGuide = TRUE,
+                    guideHang = 0.05,
+                    main = "Gene dendrogram and module colors")
+```
+
+### Merging of modules whose expression profiles are very similar
+
+```{r}
+MEList <- moduleEigengenes(datExpr, colors = dynamicColors)
+MEs <- MEList$eigengenes
+
+MEDiss <- 1 - cor(MEs)
+
+METree <- hclust(as.dist(MEDiss), method = "average")
+```
+
+```{r, fig.width=12, fig.height=9}
+plot(METree, main = "Clustering of module eigengenes",
+     xlab = "", sub = "")
+```
+

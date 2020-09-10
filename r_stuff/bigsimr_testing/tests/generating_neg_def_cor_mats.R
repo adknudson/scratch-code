@@ -1,5 +1,5 @@
 library(tidyverse)
-devtools::load_all()
+library(bigsimr)
 
 dat0 <- readRDS(
   file = "~/Downloads/complete_processed_tcga2stat_RNASeq2_with_clinical.rds")
@@ -19,7 +19,7 @@ brca_rho <- cor_fast(brca2, method = "spearman")
 rho <- cor_convert(brca_rho, "spearman", "pearson")
 write.table(
   rho,
-  file = "~/projects/SchisslerGroup@github/bigsimr/scratch/rho_ND_1K.csv",
+  file = "~/projects/scratch-code/r_stuff/bigsimr_testing/rho_ND_1K.csv",
   sep = ",",
   row.names = FALSE,
   col.names = FALSE
@@ -36,7 +36,7 @@ brca_rho <- cor_fast(brca2, method = "spearman")
 rho <- cor_convert(brca_rho, "spearman", "pearson")
 write.table(
   rho,
-  file = "~/projects/SchisslerGroup@github/bigsimr/scratch/rho_ND_3K.csv",
+  file = "~/projects/scratch-code/r_stuff/bigsimr_testing/rho_ND_3K.csv",
   sep = ",",
   row.names = FALSE,
   col.names = FALSE
@@ -52,7 +52,7 @@ brca_rho <- cor_fast(brca2, method = "spearman")
 rho <- cor_convert(brca_rho, "spearman", "pearson")
 write.table(
   rho,
-  file = "~/projects/SchisslerGroup@github/bigsimr/scratch/rho_ND_5K.csv",
+  file = "~/projects/scratch-code/r_stuff/bigsimr_testing/rho_ND_5K.csv",
   sep = ",",
   row.names = FALSE,
   col.names = FALSE
@@ -69,7 +69,7 @@ brca_rho <- cor_fast(brca2, method = "spearman")
 rho <- cor_convert(brca_rho, "spearman", "pearson")
 write.table(
   rho,
-  file = "~/projects/SchisslerGroup@github/bigsimr/scratch/rho_ND_10K.csv",
+  file = "~/projects/scratch-code/r_stuff/bigsimr_testing/rho_ND_10K.csv",
   sep = ",",
   row.names = FALSE,
   col.names = FALSE

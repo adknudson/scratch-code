@@ -1,0 +1,35 @@
+---
+title: "Tobacco Plant"
+author: "Alex Knudson"
+date: "9/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(SWisSFreeNet)
+library(tidyverse)
+library(WGCNA)
+```
+
+# Look at the Data
+
+```{r}
+glimpse(tobacco)
+```
+
+This is a time series data set (Days 0, 2, and 4) of a tobacco plant (M41) with three conditions (1, 2, and 3).
+
+# Network Construction and Module Detection
+
+```{r}
+enableWGCNAThreads()
+```
+
+## Automatic Method
+
+```{r}
+powers = c(1:10, seq(12, 20, 2))
+```
+
