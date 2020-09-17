@@ -6,3 +6,5 @@
 *.gif
 
 .ipynb_checkpoints
+/**/*_cache/**/*
+/**/*_files/**/*
