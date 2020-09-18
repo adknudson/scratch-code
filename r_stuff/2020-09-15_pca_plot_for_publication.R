@@ -23,12 +23,12 @@ PCs <- scale(pca$x) %>%
                             levels = c("0h", "3h", "8h", "24h"),
                             labels = c("Control", "3h", "8h", "24h")),
          replication = as.integer(replication)) %>%
-  rename(`Stain Duration` = condition)
+  rename(`Strain Duration` = condition)
 
 PCA_percents <- round(100 * pca$sdev^2 / sum(pca$sdev^2), 2)
 
 pca_plot <- PCs %>%
-  ggplot(aes(PC1, PC2, fill = `Stain Duration`)) +
+  ggplot(aes(PC1, PC2, fill = `Strain Duration`)) +
   geom_point(size = 5, shape = 21) +
   labs(x = paste0("PC1 (", PCA_percents[1], "%)"),
        y = paste0("PC2 (", PCA_percents[2], "%)"),
