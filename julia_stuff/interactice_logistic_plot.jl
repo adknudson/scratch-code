@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.2
+# v0.11.14
 
 using Markdown
 using InteractiveUtils
@@ -13,11 +13,11 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ ae901c26-d792-11ea-028b-11d820355e31
-
-
 # ╔═╡ 7c1f8b60-d77d-11ea-21b3-d15aa0e50659
-using Distributions, StatsPlots
+using Distributions, StatsPlots, PlutoUI
+
+# ╔═╡ 0dcc2354-fc57-11ea-03e8-bbca30abdb98
+
 
 # ╔═╡ 84afba84-d77d-11ea-20cf-abd102229eff
 function random_coef(n::Int, dA, dB)
@@ -26,6 +26,9 @@ end
 
 # ╔═╡ 138d0d74-d77e-11ea-3a3a-7f9776a93f32
 F(x, a, b) = 1 / (1 + exp(-(b * (x - a))))
+
+# ╔═╡ fee5136c-fc58-11ea-3796-35567ac94d11
+F2(x, a, b) = F(x, a, exp(b))
 
 # ╔═╡ 2f14442e-d77e-11ea-1c2c-6f8928693a7f
 function sample_F(n, size, xs, F, a, b)
@@ -75,46 +78,35 @@ function plot_F_family(n, dA, dB, F)
 end
 
 # ╔═╡ f0bd4ec8-d785-11ea-2f51-c3a1d71865a2
-begin
-	ma = @bind μa html"<input type='range' min='-0.1' max='0.1' step='0.01' value='0.0'>"
-		sa = @bind σa html"<input type='range' min='0' max='0.5' step='0.005' value='0.1'>"
-	mb = @bind μb html"<input type='range' min='-5' max='5' step='0.1' value='2'>"
-	sb = @bind σb html"<input type='range' min='0.1' max='2' step='0.1' value='1'>"
-	n_s = @bind n html"<input type='range' min='1' max='500' value='100'>"
-	
-	md"""
-	μₐ: -0.1 $(ma) 0.1
-	
-	σₐ: 0 $(sa) 0.5
-	
-	---
-	
-	μᵦ: -5 $(mb) 5
-	
-	σᵦ: 0.1 $(sb) 2
-	
-	---
-	
-	n: 1 $(n_s) 500
-	"""
-end
+md"""
+| $\mu_\alpha$ | $(@bind μa Slider(-0.1:0.01:0.1, default=0.0, show_value=true)) |
+
+| $\sigma_\alpha$ | $(@bind σa Slider(0.005:0.005:0.5, default=0.1, show_value=true)) |
+
+| $\mu_\beta$ | $(@bind μb Slider(-5:0.1:5, default=2.0, show_value=true)) |
+
+| $\sigma_\beta$ | $(@bind σb Slider(0.1:0.1:2.0, default=1.0, show_value=true))|
+
+| $n$ | $(@bind n Slider(1:500, default=100, show_value=true)) |
+"""
 
 # ╔═╡ fe9959f8-d783-11ea-1385-894e7dfdc2ca
-plot_F_family(n, Normal(μa, σa), LogNormal(μb, σb), F)
+plot_F_family(n, Normal(μa, σa), (Normal(μb, σb)), F2)
 
 # ╔═╡ b195636c-d784-11ea-3930-45f507d01339
 @show (μa = μa, σa = σa, μb = μb, σb = σb)
 
 # ╔═╡ Cell order:
 # ╠═7c1f8b60-d77d-11ea-21b3-d15aa0e50659
+# ╠═0dcc2354-fc57-11ea-03e8-bbca30abdb98
 # ╠═84afba84-d77d-11ea-20cf-abd102229eff
 # ╠═138d0d74-d77e-11ea-3a3a-7f9776a93f32
+# ╠═fee5136c-fc58-11ea-3796-35567ac94d11
 # ╠═2f14442e-d77e-11ea-1c2c-6f8928693a7f
 # ╟─1d7932a0-d782-11ea-30ab-bbd898f7d004
 # ╠═f73251d2-d77f-11ea-1f13-bd96ccbe7a05
 # ╟─aa44a628-d792-11ea-31e5-9da1d1747838
-# ╠═ae901c26-d792-11ea-028b-11d820355e31
 # ╠═acd14d66-d782-11ea-14a0-9707de057ba6
 # ╟─f0bd4ec8-d785-11ea-2f51-c3a1d71865a2
-# ╟─fe9959f8-d783-11ea-1385-894e7dfdc2ca
+# ╠═fe9959f8-d783-11ea-1385-894e7dfdc2ca
 # ╟─b195636c-d784-11ea-3930-45f507d01339

@@ -1,14 +1,8 @@
 ### A Pluto.jl notebook ###
-# v0.11.2
+# v0.11.14
 
 using Markdown
 using InteractiveUtils
-
-# ╔═╡ 97e1ffb8-dc46-11ea-3208-497ea366a682
-
-
-# ╔═╡ 8105a24a-dc46-11ea-0131-6db17e870179
-
 
 # ╔═╡ 42bfc99e-dc40-11ea-335d-9dcefe11b256
 using Turing, Distributions, StatsPlots, DataFrames
@@ -64,6 +58,12 @@ DataFrame(chain)
 
 # ╔═╡ 62537328-dc45-11ea-378c-73810ed0c294
 chain[:a].value + chain[:aT].value
+
+# ╔═╡ 97e1ffb8-dc46-11ea-3208-497ea366a682
+
+
+# ╔═╡ 8105a24a-dc46-11ea-0131-6db17e870179
+
 
 # ╔═╡ Cell order:
 # ╠═3c208a60-dc40-11ea-3da4-4dcee50f156b

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.2
+# v0.11.14
 
 using Markdown
 using InteractiveUtils
@@ -12,9 +12,6 @@ macro bind(def, element)
         el
     end
 end
-
-# ╔═╡ 8e25fa30-dc3f-11ea-31aa-3ba18609064f
-
 
 # ╔═╡ d273e24e-dc3d-11ea-3505-451cee9a5677
 using Distributions, StatsPlots
@@ -58,6 +55,9 @@ end
 
 # ╔═╡ 7763bff8-dc3f-11ea-3f0c-2929bf0bbb0a
 sample_delta(10, Normal(0, 1), Normal(0, 1), Normal(0, 1), Normal(0, 1), false)
+
+# ╔═╡ 8e25fa30-dc3f-11ea-31aa-3ba18609064f
+
 
 # ╔═╡ Cell order:
 # ╠═d273e24e-dc3d-11ea-3505-451cee9a5677
