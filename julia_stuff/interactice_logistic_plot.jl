@@ -16,7 +16,7 @@ end
 # ╔═╡ 7c1f8b60-d77d-11ea-21b3-d15aa0e50659
 using Distributions, StatsPlots, PlutoUI
 
-# ╔═╡ 0dcc2354-fc57-11ea-03e8-bbca30abdb98
+# ╔═╡ bdfbe494-0299-11eb-0dfe-3b0bb5f19d50
 
 
 # ╔═╡ 84afba84-d77d-11ea-20cf-abd102229eff
@@ -98,7 +98,7 @@ plot_F_family(n, Normal(μa, σa), (Normal(μb, σb)), F2)
 
 # ╔═╡ Cell order:
 # ╠═7c1f8b60-d77d-11ea-21b3-d15aa0e50659
-# ╠═0dcc2354-fc57-11ea-03e8-bbca30abdb98
+# ╠═bdfbe494-0299-11eb-0dfe-3b0bb5f19d50
 # ╠═84afba84-d77d-11ea-20cf-abd102229eff
 # ╠═138d0d74-d77e-11ea-3a3a-7f9776a93f32
 # ╠═fee5136c-fc58-11ea-3796-35567ac94d11

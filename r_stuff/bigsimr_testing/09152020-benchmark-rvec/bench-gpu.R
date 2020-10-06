@@ -25,10 +25,8 @@ sim_and_calc <- function(n, d, R, m) {
 
 x <- sim_and_calc(n, 5000, R, margins)
 Rhat <- cor_fast(x, method = "pearson")
-RHat <- cor(x)
 
 anyNA(Rhat)
-anyNA(RHat)
 
 mbm_gpu <- microbenchmark(
   d10n1e4 = sim_and_calc(n, 10, R, margins),
