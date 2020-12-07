@@ -1,5 +1,6 @@
 using CircularArrays
 using Underscores
+using BenchmarkTools
 
 
 parse_terrain(str) = @_ readlines(str) .|>
@@ -28,3 +29,6 @@ slide(h; right=3, down=1)
 
 test_slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
 prod([slide(h; right=r, down=d) for (r, d) in test_slopes])
+
+@benchmark slide($h; right=3, down=1)
+@benchmark prod([slide(h; right=r, down=d) for (r, d) in test_slopes])

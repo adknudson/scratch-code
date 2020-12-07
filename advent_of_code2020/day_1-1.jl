@@ -47,4 +47,4 @@ pair = expense_report(s)
 sum(pair)
 prod(pair)
 
-@btime expense_report(s)
+@benchmark expense_report($s)

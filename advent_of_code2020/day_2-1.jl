@@ -1,3 +1,5 @@
+using BenchmarkTools
+
 #=
 Each line gives the password policy and then the password. The password policy 
 indicates the lowest and highest number of times a given letter must appear for
@@ -17,3 +19,5 @@ function solution(str)
 end
 
 solution("day2_input.txt")
+
+@benchmark solution("day2_input.txt")

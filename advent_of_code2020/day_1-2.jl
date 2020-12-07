@@ -15,4 +15,4 @@ triplet = expense_report(s)
 sum(triplet)
 prod(triplet)
 
-@btime expense_report(s)
+@benchmark expense_report(s)
