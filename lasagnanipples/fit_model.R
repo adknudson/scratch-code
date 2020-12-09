@@ -1,9 +1,15 @@
 library(rstan)
 
-N <- 100
-x <- seq(1, 100, length.out = N)
-y <-
-dat <- list(N=N, x=x, y=y)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
 
-m <- stan(file = "scratch-code/lasagnanipples/model.stan",
-          algorithm = "Fixed_param")
+
+df <- read.csv("data.csv")
+dat <- list(x = df$x, y = df$y, N = length(df$x))
+
+m <- stan(file = "model.stan", data = dat,
+          cores = 4, chains = 4,
+          warmup = 2000, iter = 4500)
+
+summ <- as.data.frame(summary(m)$summary)
+summ[,c("mean", "2.5%", "97.5%"),drop=FALSE]

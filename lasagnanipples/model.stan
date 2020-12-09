@@ -1,13 +1,9 @@
 functions{
-  real pv(real x,
-          real amplig,
-          real ampliL,
-          real cen_G1,
-          real cen_L1,
-          real sigma_g1,
-          real sigma_L1,
-          real m) {
-    return (m*ampliL/(1+((x-cen_L1)^2)/(sigma_L1^2))) + (((1-m)*amplig)/(exp(log(2)*((x-cen_G1)^2)/(sigma_g1^2))));
+  real G(real x, real c, real s) {
+    return exp(-log(2) * ((x - c) / s)^2);
+  }
+  real L(real x, real c, real s) {
+    return 1 / (1 + ((x - c) / s)^2);
   }
 }
 data {
@@ -16,30 +12,36 @@ data {
   vector[N] y;
 }
 parameters {
-  real amplig;
-  real ampliL;
-  real cen_G1;
-  real cen_L1;
-  real<lower=0> sigma_g1;
-  real<lower=0> sigma_L1;
-  real m;
-  real<lower=0> std_dev;
-}
+  real<lower=0, upper=1> m;
 
-transformed parameters {
-  vector[N] pvmodel;
-  for (i in 1:N) {
-    pvmodel[i] = pv(x[i], amplig, ampliL, cen_G1, cen_L1, sigma_g1, sigma_L1, m);
-  }
+  real Ag;
+  real Cg;
+  real<lower=0> Sg;
+
+  real Al;
+  real Cl;
+  real<lower=0> Sl;
+
+  real<lower=0> sigma;
 }
 model {
-  y ~ normal(pvmodel, std_dev);
-  amplig ~ normal(100,  1);
-  ampliL ~ cauchy(50, 1);
-  cen_G1 ~ normal(50, 1);
-  cen_L1 ~ cauchy(50, 1);
-  sigma_g1 ~ normal(5, 1);
-  sigma_L1 ~ cauchy(5, 1);
-  m ~ normal(0, 1);
-  std_dev ~ normal(1, 100);
+  vector[N] mu;
+
+  m ~ beta(8, 2);
+
+  Ag ~ normal(50, 5);
+  Cg ~ normal(100, 100);
+  Sg ~ exponential(0.1);
+
+  Al ~ normal(20, 5);
+  Cl ~ normal(0, 100);
+  Sl ~ exponential(0.1);
+
+  sigma ~ exponential(1);
+
+  for (n in 1:N) {
+    mu[n] = m * Al * L(x[n], Cl, Sl) + (1 - m) * Ag * G(x[n], Cg, Sg);
+  }
+
+  y ~ normal(mu, sigma);
 }
