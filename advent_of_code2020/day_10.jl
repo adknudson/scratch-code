@@ -96,8 +96,115 @@ Find a chain that uses all of your adapters to connect the charging outlet to yo
 """
 
 # ╔═╡ c3f7002c-3b09-11eb-39fe-bfda26bc2f80
+input = sort!(parse.(Int, readlines("day10_input.txt")))
+
+# ╔═╡ fec71982-3b25-11eb-3cbb-01f05708b04d
+insert!(input, 1, 0)
+
+# ╔═╡ ed72e3aa-3b25-11eb-0526-99bc1cc8d5b5
+push!(input, last(input)+3)
+
+# ╔═╡ dbe6b72e-3b25-11eb-1a94-0dcc8696e1c3
+diff_distr = diff(input)
+
+# ╔═╡ 48922758-3b26-11eb-2ff0-bf0ad9e077ee
+diff_table = Dict(i => sum(diff_distr .== i) for i in unique(diff_distr))
+
+# ╔═╡ 5a057418-3b26-11eb-30ce-eb43259753c1
+diff_table[1] * diff_table[3]
+
+# ╔═╡ c47168e0-3b26-11eb-1619-61378a553fb2
+md"""
+## Part Two
+
+To completely determine whether you have enough adapters, you'll need to figure out how many different ways they can be arranged. Every arrangement needs to connect the charging outlet to your device. The previous rules about when adapters can successfully connect still apply.
+
+The first example above (the one that starts with 16, 10, 15) supports the following arrangements:
+
+```
+(0), 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, (22)
+(0), 1, 4, 5, 6, 7, 10, 12, 15, 16, 19, (22)
+(0), 1, 4, 5, 7, 10, 11, 12, 15, 16, 19, (22)
+(0), 1, 4, 5, 7, 10, 12, 15, 16, 19, (22)
+(0), 1, 4, 6, 7, 10, 11, 12, 15, 16, 19, (22)
+(0), 1, 4, 6, 7, 10, 12, 15, 16, 19, (22)
+(0), 1, 4, 7, 10, 11, 12, 15, 16, 19, (22)
+(0), 1, 4, 7, 10, 12, 15, 16, 19, (22)
+```
+
+(The charging outlet and your device's built-in adapter are shown in parentheses.) Given the adapters from the first example, the total number of arrangements that connect the charging outlet to your device is 8.
+
+The second example above (the one that starts with 28, 33, 18) has many arrangements. Here are a few:
+
+```
+(0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 48, 49, (52)
+
+(0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 49, (52)
+
+(0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+32, 33, 34, 35, 38, 39, 42, 45, 46, 48, 49, (52)
+
+(0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+32, 33, 34, 35, 38, 39, 42, 45, 46, 49, (52)
+
+(0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+32, 33, 34, 35, 38, 39, 42, 45, 47, 48, 49, (52)
+
+(0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+46, 48, 49, (52)
+
+(0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+46, 49, (52)
+
+(0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+47, 48, 49, (52)
+
+(0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+47, 49, (52)
+
+(0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+48, 49, (52)
+```
+
+In total, this set of adapters can connect the charging outlet to your device in 19208 distinct arrangements.
+
+You glance back down at your bag and try to remember why you brought so many adapters; there must be more than a trillion valid ways to arrange them! Surely, there must be an efficient way to count the arrangements.
+
+**What is the total number of distinct ways you can arrange the adapters to connect the charging outlet to your device?**
+"""
+
+# ╔═╡ 5925856e-3b29-11eb-1cc6-ff9658e8421e
+function P(V::Vector{Int}, k::Int, D=Dict{Int, Int}())
+	if haskey(D, k)
+		return D[k]
+	elseif k ∉ V
+		D[k] = 0
+		return D[k]
+	elseif k == minimum(V)
+		return 1
+	else
+		D[k] = P(V, k-1, D) + P(V, k-2, D) + P(V, k-3, D)
+		return D[k]
+	end
+end
+
+# ╔═╡ 2a6bb3d0-3b31-11eb-35a0-cf5f23e740e1
+P(input, maximum(input))
+
+# ╔═╡ 9ebb81a2-3b7c-11eb-25d5-5381d8a86700
 
 
 # ╔═╡ Cell order:
 # ╟─c5310ed8-3b04-11eb-3c2f-551d43ce964e
 # ╠═c3f7002c-3b09-11eb-39fe-bfda26bc2f80
+# ╠═fec71982-3b25-11eb-3cbb-01f05708b04d
+# ╠═ed72e3aa-3b25-11eb-0526-99bc1cc8d5b5
+# ╠═dbe6b72e-3b25-11eb-1a94-0dcc8696e1c3
+# ╠═48922758-3b26-11eb-2ff0-bf0ad9e077ee
+# ╠═5a057418-3b26-11eb-30ce-eb43259753c1
+# ╟─c47168e0-3b26-11eb-1619-61378a553fb2
+# ╠═5925856e-3b29-11eb-1cc6-ff9658e8421e
+# ╠═2a6bb3d0-3b31-11eb-35a0-cf5f23e740e1
+# ╠═9ebb81a2-3b7c-11eb-25d5-5381d8a86700
