@@ -69,6 +69,9 @@ function value_mask(X::Int, M)
 	parse(Int, B, base=2)
 end
 
+# ╔═╡ 7d0867e6-434c-11eb-3a71-c7d66a61da0f
+value_mask(11, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X")
+
 # ╔═╡ 4b56fdf0-424a-11eb-2313-8f2fcebf64c6
 D = open("day14_input.txt") do io
 	D = Dict{Int, Int}()
@@ -197,11 +200,12 @@ D2 = open("day14_input.txt") do io
 end
 
 # ╔═╡ aba8e148-4306-11eb-27e5-e7fb32f1dccb
-
+sum(values(D2))
 
 # ╔═╡ Cell order:
 # ╟─f7246e36-4245-11eb-1b8b-fb2a10704203
 # ╠═6dbfb8c6-424c-11eb-02bd-6bdd4fc0c0d5
+# ╠═7d0867e6-434c-11eb-3a71-c7d66a61da0f
 # ╠═4b56fdf0-424a-11eb-2313-8f2fcebf64c6
 # ╠═40af561a-424d-11eb-2643-0f6db4ba9ce4
 # ╟─656e7758-424d-11eb-1b96-095bb77893d0

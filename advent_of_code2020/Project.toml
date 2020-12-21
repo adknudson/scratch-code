@@ -1,6 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CircularArrays = "7a955b69-7140-5f4e-a0ed-f168c5e2e749"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 GraphPlot = "a2cc645c-3eea-5389-862e-a155d0052231"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
