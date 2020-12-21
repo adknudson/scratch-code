@@ -4,6 +4,9 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ cbcf7518-42fc-11eb-2ffd-c318cb2c665e
+using IterTools
+
 # ╔═╡ f7246e36-4245-11eb-1b8b-fb2a10704203
 md"""# Day 14: Docking Data
 As your ferry approaches the sea port, the captain asks for your help again. The computer system that runs this port isn't compatible with the docking program on the ferry, so the docking parameters aren't being correctly initialized in the docking program's memory.
@@ -57,7 +60,7 @@ Execute the initialization program. What is the sum of all values left in memory
 """
 
 # ╔═╡ 6dbfb8c6-424c-11eb-02bd-6bdd4fc0c0d5
-function apply_mask(X::Int, M)
+function value_mask(X::Int, M)
 	B = collect(bitstring(X)[end-35:end])
 	M = collect(M)
 	i = findall(!=('X'), M)
@@ -77,7 +80,7 @@ D = open("day14_input.txt") do io
 			continue
 		end
 		loc, val = parse.(Int, match(r"mem\[(\d+)\] = (\d+)", r).captures)
-		D[loc] = apply_mask(val, mask)
+		D[loc] = value_mask(val, mask)
 	end
 	D
 end
@@ -150,9 +153,61 @@ The entire 36-bit address space still begins initialized to the value 0 at every
 Execute the initialization program using an emulator for a version 2 decoder chip. What is the sum of all values left in memory after it completes?
 """
 
+# ╔═╡ 63ef0ec6-4302-11eb-240a-af6c36564b0d
+function replace_Xs(S, i, v)
+	S = collect(S)
+	S[i] .= v
+	S
+end
+
+# ╔═╡ 1d4baf8c-42fb-11eb-3323-9b119ff1e05d
+function mem_mask(addr::Int, mask)
+	A = collect(bitstring(addr)[end-35:end])
+	M = collect(mask)
+	i = findall(==('1'), M)
+	A[i] .= M[i]
+	
+	x = findall(==('X'), M)
+	vs = product(Iterators.repeated(['0', '1'], length(x))...)
+	As = [replace_Xs(A, x, v) for v in vs]
+	
+	parse.(Int, join.(As), base=2)
+end
+
+# ╔═╡ 718d251e-4306-11eb-1762-bb01b864236b
+mem_mask(42, "000000000000000000000000000000X1001X")
+
+# ╔═╡ c75c0948-4305-11eb-108d-b11f76db5759
+D2 = open("day14_input.txt") do io
+	D = Dict{Int, Int}()
+	mask = ""
+	while !eof(io)
+		r = readline(io)
+		if occursin("mask", r)
+			mask = match(r"mask = ([01X]+)", r).captures[1]
+			continue
+		end
+		
+		loc, val = parse.(Int, match(r"mem\[(\d+)\] = (\d+)", r).captures)
+		for addr in mem_mask(loc, mask)
+			D[addr] = val
+		end
+	end
+	D
+end
+
+# ╔═╡ aba8e148-4306-11eb-27e5-e7fb32f1dccb
+
+
 # ╔═╡ Cell order:
 # ╟─f7246e36-4245-11eb-1b8b-fb2a10704203
 # ╠═6dbfb8c6-424c-11eb-02bd-6bdd4fc0c0d5
 # ╠═4b56fdf0-424a-11eb-2313-8f2fcebf64c6
 # ╠═40af561a-424d-11eb-2643-0f6db4ba9ce4
 # ╟─656e7758-424d-11eb-1b96-095bb77893d0
+# ╠═cbcf7518-42fc-11eb-2ffd-c318cb2c665e
+# ╠═63ef0ec6-4302-11eb-240a-af6c36564b0d
+# ╠═1d4baf8c-42fb-11eb-3323-9b119ff1e05d
+# ╠═718d251e-4306-11eb-1762-bb01b864236b
+# ╠═c75c0948-4305-11eb-108d-b11f76db5759
+# ╠═aba8e148-4306-11eb-27e5-e7fb32f1dccb
