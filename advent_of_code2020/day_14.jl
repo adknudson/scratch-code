@@ -177,9 +177,6 @@ function mem_mask(addr::Int, mask)
 	parse.(Int, join.(As), base=2)
 end
 
-# ╔═╡ 718d251e-4306-11eb-1762-bb01b864236b
-mem_mask(42, "000000000000000000000000000000X1001X")
-
 # ╔═╡ c75c0948-4305-11eb-108d-b11f76db5759
 D2 = open("day14_input.txt") do io
 	D = Dict{Int, Int}()
@@ -212,6 +209,5 @@ sum(values(D2))
 # ╠═cbcf7518-42fc-11eb-2ffd-c318cb2c665e
 # ╠═63ef0ec6-4302-11eb-240a-af6c36564b0d
 # ╠═1d4baf8c-42fb-11eb-3323-9b119ff1e05d
-# ╠═718d251e-4306-11eb-1762-bb01b864236b
 # ╠═c75c0948-4305-11eb-108d-b11f76db5759
 # ╠═aba8e148-4306-11eb-27e5-e7fb32f1dccb
