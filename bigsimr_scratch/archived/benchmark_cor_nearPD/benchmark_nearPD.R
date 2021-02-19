@@ -1,7 +1,7 @@
 library(bigsimr)
 library(JuliaCall)
 julia <- julia_setup("/home/alex/julia-1.5.3/bin/")
-julia$library("MvSim")
+julia$library("Bigsimr")
 library(tidyverse)
 library(microbenchmark)
 
