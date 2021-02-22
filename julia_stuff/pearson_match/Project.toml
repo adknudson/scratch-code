@@ -1,0 +1,7 @@
+[deps]
+Bigsimr = "8782c2a4-92bb-4214-98d7-3150cbd7a677"
+BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+GalacticOptim = "a75be94c-b780-496d-a8a9-0878b188d577"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
