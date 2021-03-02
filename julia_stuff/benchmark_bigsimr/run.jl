@@ -1,69 +1,93 @@
-using Bigsimr, Distributions
+using Bigsimr
+using Distributions
 using DataFrames
 using BenchmarkTools
+using Dates
+using CSV
 
-# "preheat" the bigsimr functions
-cor(rand(10), rand(10), Pearson)
-cor(rand(10), rand(10), Spearman)
-cor(rand(10), rand(10), Kendall)
+using Logging, LoggingExtras
+logger = FileLogger("bench.log")
+global_logger(logger)
 
-cor(rand(10, 10), Pearson)
-cor(rand(10, 10), Spearman)
-cor(rand(10, 10), Kendall)
 
-cor_fast(rand(10, 10), Pearson)
-cor_fast(rand(10, 10), Spearman)
-cor_fast(rand(10, 10), Kendall)
+Base.clamp(R::Matrix, L::Matrix, U::Matrix) = clamp.(R, L, U)
 
-cor_convert(rand(10, 10), Spearman, Pearson)
-cor_convert(rand(10, 10), Kendall, Pearson)
 
-d = NegativeBinomial(20, 0.2)
-pearson_match(0.5, d, d)
+function my_bench(mat::Matrix, d::Int, C::Type{<:Bigsimr.Correlation}, n=10_000)
+    @info "Beginning benchmark at $(DateTime(now())) with" Dimension=d Correlation=C Samples=n
 
-d = NegativeBinomial(20, 0.002)
-pearson_bounds(d, d)
-pearson_match(0.5, d, d)
+    @info "Step 0 - Estimating parameters"
+    m = mat[:,1:d]
+    margins = [fit(Gamma, x) for x in eachcol(m)]
 
-d = Gamma(2, 0.002)
-pearson_bounds(d, d)
-pearson_match(0.5, d, d)
+    @info "Step 1 - Estimating the correlation"
+    s1 = @timed begin
+        if C === Kendall
+            cor_fast(m, Kendall)
+        else
+            cor(m, C)
+        end
+    end
 
-s = cor_randPSD(100)
-p = cor_convert(s, Spearman, Pearson)
-r = cor_nearPD(p)
-cor_nearPD(p, 1e-6)
-cor_nearPD(p, 1e-6, tol=1e-6)
-cor_fastPD(p)
+    @info "Step 2 - Adjusting the correlation"
+    s2 = @timed begin
+        if C === Pearson
+            pearson_match(s1.value, margins)
+        else
+            cor_convert(s1.value, C, Pearson)
+        end
+    end
 
-k = cor_randPSD(1000)
-p = cor_convert(s, Kendall, Pearson)
-Bigsimr.iscorrelation(p)
-@btime cor_nearPD(p, 1e-6, tol=1e-2)
-@btime cor_nearPD(p, 1e-6, tol=1e-6)
-@btime cor_fastPD(p)
+    @info "Step 3 - Checking the correlation admissibility"
+    s3 = @timed !Bigsimr.iscorrelation(s2.value) ? cor_nearPD(s2.value) : s2.value
 
-r1 = cor_nearPD(p, 1e-6, tol=1e-2)
-r2 = cor_nearPD(p, 1e-6, tol=1e-6)
-r3 = cor_fastPD(p)
+    @info "Step 4 - Simulating the data"
+    s4 = @timed rvec(n, s3.value, margins)
 
-Bigsimr.iscorrelation(r1)
-Bigsimr.iscorrelation(r2)
-Bigsimr.iscorrelation(r3)
+    @info "Ending benchmark at $(DateTime(now()))"
+    DataFrame(
+        dim = d,
+        corr = C,
+        samples = n,
+        corr_time = s1.time,
+        adjust_time = s2.time,
+        admiss_time = s3.time,
+        sim_time = s4.time,
+        total_time = s1.time + s2.time + s3.time + s4.time
+    )
+end
 
-d = Gamma(3, 0.01)
-rvec(10, cor_randPD(2), [d, d])
 
-d = 20
-tmp_cor = cor_randPD(d)
+
+@info "Creating synthetic data"
+d = 5_000
+
+@info "Generating Gamma parameters"
 shapes = rand(Uniform(1, 10), d)
-rates  = rand(Exponential(1/5), d)
-tmp_margins = [Gamma(s, r) for (s,r) in zip(shapes, rates)]
-pearson_match(tmp_cor, tmp_margins)
+rates = rand(Exponential(1/5), d)
+margins = [Gamma(s, r) for (s,r) in zip(shapes, rates)]
 
-# make synthetic data
-d = 10_000
-shapes = rand(Uniform(1, 10), d)
-rates  = rand(Exponential(1/5), d)
-corr   = cor_randPSD(d)
+@info "Creating a valid correlation matrix"
+lb, ub = pearson_bounds(margins)
+corr = cor_randPSD(d)
+corr = clamp(corr, lb, ub)
+if !Bigsimr.iscorrelation(corr)
+    corr = cor_nearPD(corr)
+end
 
+@info "Simulating correlated Gamma margins"
+mat = rvec(10_000, corr, margins)
+
+@info "Running the benchmarks"
+cor_types = (Pearson, Spearman, Kendall)
+dim_sizes = (2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000)
+sample_sizes = (100, 1000, 10_000)
+@info "Configuration:" cor_types dim_sizes sample_sizes
+
+
+benchmark_results = vcat(
+    [my_bench(mat, d, c, n) for d in dim_sizes, c in cor_types, n in sample_sizes]...
+)
+
+@info "Saving the results"
+CSV.write("benchmark_results.csv", benchmark_results)
