@@ -39,7 +39,14 @@ function my_bench(mat::Matrix, d::Int, C::Type{<:Bigsimr.Correlation}, n=10_000)
     end
 
     @info "Step 3 - Checking the correlation admissibility"
-    s3 = @timed !Bigsimr.iscorrelation(s2.value) ? cor_nearPD(s2.value) : s2.value
+    s3 = @timed begin
+        if !Bigsimr.iscorrelation(s2.value)
+            @warn "Correlation matrix from step 2 is not positive definite"
+            cor_nearPD(s2.value)
+        else
+            s2.value
+        end
+    end
 
     @info "Step 4 - Simulating the data"
     s4 = @timed rvec(n, s3.value, margins)
@@ -79,9 +86,9 @@ end
 mat = rvec(10_000, corr, margins)
 
 @info "Running the benchmarks"
-cor_types = (Pearson, Spearman, Kendall)
-dim_sizes = (2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000)
-sample_sizes = (100, 1000, 10_000)
+cor_types = (Pearson, Spearman)
+dim_sizes = (2, 200, 500, 1000, 2000, 5000)
+sample_sizes = (1000,)
 @info "Configuration:" cor_types dim_sizes sample_sizes
 
 
