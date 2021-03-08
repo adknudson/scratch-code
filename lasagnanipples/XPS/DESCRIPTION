@@ -1,0 +1,26 @@
+Hi, I was wondering if you could be of some assistance, I am currently working with some raw data of a model with 4 peaks, the stan model I have isn't able to pick up 4 peaks as the peak positions are so close together. When i set them as fixed, this makes matters worse as the peak positions can vary by around 5%-ish and so will exhibit some variance even though the postions are very close together. When trying to code this in this generates issues in mutli-modality/convergence/dual-moded posteriors on the pair plots. Ordering the vectors doesn't fix things, keeping them as fixed isn't strictly true and defeats the point of parameter estimation. Any tips? I can send you the data if you would like and the model in a txt.file or something. I have tried just about everything I can think of and I am at loss. I tried asking the stan forum but no replies unfortunately :frowning:
+Currently it can pick up 3 peaks bar the 1. The main peak seems to 'hide' the fourth missing peak to be detected...
+
+Hi, thanks for the reply. The common way of parameter estimation is using  a figure of merit such as the reduced chi-squared + residuals. Sometimes other iterative algorithms such as the Levenberg–Marquardt algorithms are used. Software such as CASAXPS is often used to fit data. There is a good paper I will send shortly on a guide to curve fitting in XPS. There is also a paper by Ritter on Bayesian Analysis of ECSA data (XPS synonym) although a different approach is used...
+practical guide to curve fitting
+
+Attachment file type: acrobat
+paper.pdf
+
+What complicates things further is the presence of a background due to inelastic scattering. For now I removed the background in the dataframe I used, but eventually I will need to deal with that...
+
+Preliminary model
+modelsofar.txt
+
+Data
+pmma2.xlsx
+
+The columns in the data file are: binding energy(x), and the counts-background column is what should be used for now. I removed the background for now as the background complicates things quite a bit..., the coloumn 'counts-background' is what I am using as Y for now. I ordered them as a dataframe and used the absolute values as counts must be positive
+
+This is the Ritter paper, a different approach is used but some of the principles are similar...
+
+ritter1994spec.pdf
+
+The model I have kind of 'works', but I know there are issues with it... and I can't really be sure the posteriors generated are proper i don't think. sometimes i don't  get errors and sometimes I do. If i run the model like 20 times, I get errors a 1/4 of the time so I know this isn't sustainable...
+This is the databank file for PMMA, i base priors on these (slightly tweaked according to other past experimental data done with PMMA)
+pmma.pdf

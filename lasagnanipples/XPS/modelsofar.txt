@@ -1,0 +1,85 @@
+sns.set()
+np.random.seed(101)
+
+model= """
+functions{
+  real G(real x, real c, real s) {
+    return exp(-log(2) * ((x - c) / s)^2);
+  }
+  real L(real x, real c, real s) {
+    return 1 / (1 + ((x - c) / s)^2);
+  }
+}
+data {
+  int<lower=0> N;
+  ordered[N] x;
+  vector[N] y;
+}
+parameters {
+  real<lower=0, upper=1> m;
+
+  real<lower=0> A1;
+  real<lower=284, upper=291> C1;
+  real<lower=0> S1;
+  
+  real<lower=0> A2;
+  real<lower=284, upper=291> C2;
+  real<lower=0> S2;
+  
+  real<lower=0> A3;
+  real<lower=284, upper=291> C3;
+  real<lower=0> S3;
+  
+  real<lower=0> A4;
+  real<lower=284, upper=291> C4;
+  real<lower=0> S4;
+
+  real<lower=0> sigma;
+}
+model {
+  vector[N] mu;
+
+  m ~ beta(2, 8);
+
+  C1 ~ normal(285, 0.005);
+  S1 ~ normal(0.65, 0.1);
+
+  C2 ~ normal(283, 0.05);
+  S2 ~ normal(0.65, 0.1);
+  
+  C3 ~ normal(286.81, 0.005);
+  S3 ~ normal(0.65, 0.1);
+  
+  C4 ~ normal(289, 0.05);
+  S4 ~ normal(0.605, 0.1);
+
+  sigma ~ exponential(0.1);
+
+  for (n in 1:N) {
+    mu[n] = (m * A1 * L(x[n], C1, S1) + (1 - m) * A1 * G(x[n], C1, S1)) + (m * A2 * L(x[n], C2, S2) + (1 - m) * A2 * G(x[n], C2, S2)) + (m * A3 * L(x[n], C3, S3) + (1 - m) * A3 * G(x[n], C3, S3)) + (m * A4 * L(x[n], C4, S4) + (1 - m) * A4 * G(x[n], C4, S4));
+  }
+
+  y ~ normal(mu, sigma);
+}
+
+"""
+
+#dataframe sort out of data
+
+data['BR'] = data['counts-background']
+data['BR']= data['BR'].abs()
+data.sort_values(by=['BE'], inplace=True)
+
+x= data['BE']
+y= data['BR']
+plt.scatter(x,y)
+
+#Mapping data using dictionary
+data = {"N": len(x), 'x':x, 'y':y}
+
+#Model comp
+sm = pystan.StanModel(model_code=model)
+
+#Train Model
+fit = sm.sampling(data=data, iter=1000, chains=4, warmup=500, thin=1, seed=101)
+print(fit)
