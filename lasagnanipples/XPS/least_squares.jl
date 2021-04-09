@@ -22,11 +22,11 @@ md"""
 ## Model
 
 $\begin{equation}
-G(x; \mu, \sigma) = \exp\left(-\log(2) \cdot \left(\frac{x - \mu}{\sigma}\right)^2\right)
+G(x; \mu, \sigma) = 2^{-\left(\frac{2(x - \mu)}{\sigma}\right)^2}
 \end{equation}$
 
 $\begin{equation}
-L(x; \mu, \sigma) = \frac{1}{1 + \left(\frac{x - \mu}{\sigma}\right)^2}
+L(x; \mu, \sigma) = \frac{1}{1 + \left(\frac{2(x - \mu)}{\sigma}\right)^2}
 \end{equation}$
 
 $\begin{equation}
@@ -36,8 +36,8 @@ y(x) = \sum_{i=1}^{n} \left[m A_i L(x; \mu_i, \sigma_i) + (1-m) A_i G(x;\mu_i, \
 
 # ╔═╡ f43316f8-7ed0-11eb-2b52-c3cdc03b5338
 begin
-	@. G(x, μ, σ) = exp(-log(2)*((x-μ)/σ)^2)
-	@. L(x, μ, σ) = 1 / (1 + ((x-μ)/σ)^2)
+	@. G(x, μ, σ) = 2^(-(2(x-μ)/σ)^2)
+	@. L(x, μ, σ) = 1 / (1 + (2(x-μ)/σ)^2)
 	@. LG(x, m, μ, σ) = m*L(x,μ,σ) + (1-m)*G(x,μ,σ)
 end;
 
@@ -76,39 +76,6 @@ function two_peak_model(x, p)
 	@. A₁*LG(x,m,μ₁,σ₁) + A₂*LG(x,m,μ₂,σ₂)
 end
 
-# ╔═╡ c20105ae-7ed1-11eb-030e-ddb66def7bee
-# Initial Values
-p0_2 = [
-	0.5, 
-	66000.0, 285.0, 1.0, 
-	18000.0, 288.0, 1.0
-];
-
-# ╔═╡ 6da8a36c-7ed2-11eb-0ef0-6b848a6fa038
-two_peak_sol = curve_fit(two_peak_model, df2.BE, df2.BR_pos, p0_2);
-
-# ╔═╡ 92f0511a-7ed2-11eb-05d5-7df0a1c6a3f1
-p2 = two_peak_sol.param;
-
-# ╔═╡ 3a1ffc32-7ed9-11eb-3559-15c3e17bba5e
-(
-	m =p2[1], 
-	A₁=p2[2], 
-	μ₁=p2[3], 
-	σ₁=p2[4], 
-	A₂=p2[5], 
-	μ₂=p2[6], 
-	σ₂=p2[7]
-)
-
-# ╔═╡ 4c46e66c-7ed8-11eb-007e-5f520b09058b
-begin
-	plot(x->two_peak_model(x, two_peak_sol.param), 
-		 minimum(df.:BE), maximum(df.:BE), lw=2,
-	     label="LSQ Fit", title="Two-Peak Model")
-	scatter!(df.:BE, df.:BR_pos, ms=2, label="Data")
-end
-
 # ╔═╡ 2ec1ccb6-7ed3-11eb-0405-f73319e46826
 md"""
 ### Four-Peak Model
@@ -137,20 +104,56 @@ lb = [
 # Upper Bounds
 ub = [
 	1.0,
-	maximum(df2.BR_pos), maximum(df2.BE), 10.0,
-	maximum(df2.BR_pos), maximum(df2.BE), 10.0,
-	maximum(df2.BR_pos), maximum(df2.BE), 10.0,
-	maximum(df2.BR_pos), maximum(df2.BE), 10.0
+	maximum(df2.BR_pos), maximum(df2.BE), 5.0,
+	maximum(df2.BR_pos), maximum(df2.BE), 5.0,
+	maximum(df2.BR_pos), maximum(df2.BE), 5.0,
+	maximum(df2.BR_pos), maximum(df2.BE), 5.0
 ];
+
+# ╔═╡ 24382f52-823a-11eb-2d1e-77696ae06804
+BR_bar = sum(df.BR) / size(df,1)
+
+# ╔═╡ c20105ae-7ed1-11eb-030e-ddb66def7bee
+# Initial Values
+p0_2 = [
+	0.5, 
+	BR_bar, 285.0, 1.5,
+	BR_bar, 289.0, 1.5
+];
+
+# ╔═╡ 6da8a36c-7ed2-11eb-0ef0-6b848a6fa038
+two_peak_sol = curve_fit(two_peak_model, df2.BE, df2.BR_pos, p0_2);
+
+# ╔═╡ 92f0511a-7ed2-11eb-05d5-7df0a1c6a3f1
+p2 = two_peak_sol.param;
+
+# ╔═╡ 3a1ffc32-7ed9-11eb-3559-15c3e17bba5e
+(
+	m =p2[1], 
+	A₁=p2[2], 
+	μ₁=p2[3], 
+	σ₁=p2[4], 
+	A₂=p2[5], 
+	μ₂=p2[6], 
+	σ₂=p2[7]
+)
+
+# ╔═╡ 4c46e66c-7ed8-11eb-007e-5f520b09058b
+begin
+	plot(x->two_peak_model(x, two_peak_sol.param), 
+		 minimum(df.:BE), maximum(df.:BE), lw=2,
+	     label="LSQ Fit", title="Two-Peak Model")
+	scatter!(df.:BE, df.:BR_pos, ms=2, label="Data")
+end
 
 # ╔═╡ 6ce25c06-7ed3-11eb-25e5-9d2cda7b7b6c
 # Initial Values
 p0_4 = [
-	0.5, 
-	20_000.0, 283.0, 1.0, 
-	40_000.0, 284.0, 1.0,
-	30_000.0, 285.0, 1.0,
-	20_000.0, 288.0, 1.0
+	0.2, 
+	BR_bar, 283.0, 1.5, 
+	BR_bar, 284.0, 1.5,
+	BR_bar, 285.0, 1.5,
+	BR_bar, 288.0, 1.5
 ];
 
 # ╔═╡ 927c0ade-7ed3-11eb-0b08-0749c1794b38
@@ -188,7 +191,7 @@ end
 # ╔═╡ Cell order:
 # ╟─c1e9c012-7ebb-11eb-2cd0-db0f2bfe2370
 # ╠═682c3a18-7ebc-11eb-1d37-bbec0f9fe9f2
-# ╟─ec679ab2-7eca-11eb-3cf1-4305d55ce10b
+# ╠═ec679ab2-7eca-11eb-3cf1-4305d55ce10b
 # ╠═f43316f8-7ed0-11eb-2b52-c3cdc03b5338
 # ╟─ad2294ca-7ed8-11eb-0eba-fbfef093e3f6
 # ╠═9554ffc0-7ebc-11eb-2bb0-b382b5f40580
@@ -207,8 +210,9 @@ end
 # ╠═389e1354-7ed3-11eb-2f15-8d1fab394086
 # ╠═149cc904-7ed4-11eb-2fdd-df8f82e42f33
 # ╠═32c2c7c6-7ed4-11eb-261f-0b5f7171479c
+# ╠═24382f52-823a-11eb-2d1e-77696ae06804
 # ╠═6ce25c06-7ed3-11eb-25e5-9d2cda7b7b6c
 # ╠═927c0ade-7ed3-11eb-0b08-0749c1794b38
 # ╠═d0a0829c-7ed4-11eb-2cf6-1da7bc3196fc
 # ╟─df05d9fc-7ed8-11eb-0a05-151be93815e7
-# ╟─752136ae-7ed7-11eb-1c80-6bbfea50d432
+# ╠═752136ae-7ed7-11eb-1c80-6bbfea50d432
