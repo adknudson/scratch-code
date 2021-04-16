@@ -254,13 +254,13 @@ M = MarkovChain(P, states)
 
 # ╔═╡ 6d655680-bda8-47a2-8c2c-3717ababcb16
 function my_sim(M::MarkovChain)
-	X = simulate(M, 40, init = 1)
+	X = simulate(M, 45, init = 1)
 	X = unique(X)
 	return (scatters = first(last(X)), spins = length(X) - 1)
 end
 
 # ╔═╡ b5edfae5-7fb2-4097-9eb1-c92fe5903d5b
-X = [my_sim(M) for _ in 1:1_000_000];
+X = [my_sim(M) for _ in 1:10_000_000];
 
 # ╔═╡ fefb5f0a-a98b-444a-ad5a-6bbc11c5125c
 # Expected number of scatters
